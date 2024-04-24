@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Робота з БД";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Робота з даними. Підключення БД</h1>
+</div>
+<h2>Пакети</h2>
+<p>
+    Використовуємо Entity Framework, відповідно маємо додати 
+    пакети NuGet
+</p>
+<ul>
+    <li>Microsoft.EntityFrameworkCore - ядро фреймворку, основні засоби</li>
+    <li>Microsoft.EntityFrameworkCore.Tools - інструменти управління міграціями</li>
+    <li>Драйвер БД: у залежності від СУБД - 
+        для MSSQL: Microsoft.EntityFrameworkCore.SqlServer
+        MySQL: Pomelo.EntityFrameworkCore.MySql
+    </li>
+</ul>
+<h2>Структура</h2>
+<ul>
+    <li>Створюємо в корені проєкту папку Data, у ній - клас DataContext</li>
+    <li>Реалізуємо рядок підключення до БД. MSSQL може створювати БД,
+        відповідно можна створити рядок до поки що неіснуючої БД. 
+        MySQL - краще створити БД, але залишити порожньою. Рядки підключення 
+        вміщують до appsettings.json у спеціальну секцію "ConnectionStrings"
+    </li>
+    <li>Створюємо папку Data/Entities, у ній клас - User</li>
+    
+</ul>
+<h2>Перевірка</h2>
+<p>
+    Контекст реєструється у сервісах, відповідно може інжектуватись як й 
+    інші сервіси (див. HomeController).
+    Звертаючись до сервісу вилучаємо дані і передаємо до представлення: 
+    Кількість зареєстрованих користувачів - <b>@ViewData["users-count"]</b>
+</p>

@@ -1,4 +1,5 @@
-﻿@{
+﻿@model ASP_KN_P_212.Models.Home.Ioc.IocPageModel
+@{
     ViewData["Title"] = "IoC";
 }
 
@@ -47,7 +48,7 @@
     <li>Створюємо інтерфейс IHashService та клас Md5HashService </li>
     <li>Реєструємо сервіс (див. Program.cs, рядок 8 і далі)</li>
     <li>Інжектуємо сервіс (див. HomeController)</li>
-    <li>Перевіряємо його роботу: <i>@ViewData["hash"]</i></li>
+    <li>Перевіряємо його роботу: <i>@Model.SingleHash</i></li>
     <li>Імітуємо задачу: необхідно перейти на інший геш-алгоритм SHA</li>
     <li>OCP (з SOLID) "доповнюй, але не змінюй" -- створюємо новий 
         клас ShaHashService у папці Services/Hash
@@ -58,3 +59,8 @@
         змін не зазнають.
     </li>
 </ul>
+<h3>@Model.Title</h3>
+@foreach(var pair in Model.Hashes)
+{
+    <p>@pair.Key -- @pair.Value</p>
+}

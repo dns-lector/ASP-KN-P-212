@@ -29,7 +29,7 @@
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" title="Домашня сторінка"
-                            asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i></a>
+                               asp-controller="Home" asp-action="Index"><i class="bi bi-house-door"></i></a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" title="Вступ"
@@ -59,10 +59,6 @@
                             <a class="nav-link text-dark" asp-area="" title="Адміністрування контенту"
                                asp-controller="Home" asp-action="Admin"><i class="bi bi-pencil-square"></i></a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" title="Контент"
-                               asp-controller="Content" asp-action="Index"><i class="bi bi-house-heart-fill"></i></a>
-                        </li>
                     </ul>
                     @if (isAuthenticated)
                     {
@@ -77,13 +73,20 @@
 
                         <!-- Button trigger modal -->
                         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal"
-                                data-bs-target="#authModal"><i class="bi bi-person-check-fill"></i></button>
+                                data-bs-target="#authModal">
+                            <i class="bi bi-person-check-fill"></i>
+                        </button>
                     }
-                    
+
                 </div>
             </div>
         </nav>
+        <div class="sub-header">
+            <h2>Ваш найкращий вибір</h2>
+            <h3>Це ми</h3>
+        </div>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -109,7 +112,7 @@
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="auth-email-icon"><i class="bi bi-envelope-at"></i></span>
                             <input type="text" class="form-control" placeholder="Email"
-                                   aria-label="Email" aria-describedby="auth-email-icon" 
+                                   aria-label="Email" aria-describedby="auth-email-icon"
                                    id="auth-email">
                         </div>
                     </div>
@@ -124,7 +127,6 @@
                 </div>
                 <div class="modal-footer">
                     <div id="auth-message" class="alert alert-warning visually-hidden" role="alert">
-                        
                     </div>
                     <div class="spacer"></div>
                     <button type="button" class="btn btn-primary" id="auth-button">Вхід</button>
