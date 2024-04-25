@@ -9,7 +9,8 @@
         public string Salt { get; set; } // за RFC-2898
         public string DerivedKey { get; set; }  // за RFC-2898
         public DateTime? Birthdate { get; set; }
-
+        public DateTime? DeletedDt { get; set; }
+        public String? Role { get; set; }
 
         public List<Reservation> Reservations { get; set; }
     }

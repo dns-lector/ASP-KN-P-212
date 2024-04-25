@@ -181,5 +181,37 @@ function serveReserveButtons() {
     }
 
     for (let btn of document.querySelectorAll('[data-type="drop-reserve-room"]')) {
+        btn.addEventListener('click', e => {
+            const cont = e.target.closest('[data-type="drop-reserve-room"]');
+            const reserveId = cont.getAttribute('data-reserve-id');
+            if (!confirm("Підтверджуєте скасування замовлення " + reserveId)) {
+                return;
+            }
+            fetch('/api/room/reserve?reserveId=' + reserveId, {
+                method: 'DELETE'
+            }).then(r => {
+                if (r.status === 202) {
+                    window.location.reload();
+                }
+                else {
+                    r.text().then(alert);
+                }
+            });
+        });
     }
 }
+/*
+ Carts(Id, UserId, Moment, Status)
+ CartDetails( [CartId, ProductId], Cnt, Price)
+ --------
+ CRUD
+ Delete: видалення буває "м'яким" та "жорстким"
+ жорстке (hard) - реальне видалення як правило без можливості відновлення
+ м'яке - помітка даних як "видалені"
+ Висновок: слід надавати перевагу м'якому видаленню
+ Особливості:
+ https://gdpr-info.eu/art-17-gdpr/
+ Right to erasure (‘right to be forgotten’) - користувач має право видалити
+ усі персональні дані
+
+*/

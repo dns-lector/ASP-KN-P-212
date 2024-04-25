@@ -193,6 +193,11 @@ namespace ASP_KN_P_212.Data.DAL
                     .Include(r => r.Reservations)
                     .FirstOrDefault(id == null ? slugSelector : idSelector);
             }
+            if (room != null)
+            {
+                room.Reservations =
+                    room.Reservations.Where(r => r.DeletedDt == null).ToList();
+            }
             return room;
         }
 
@@ -212,17 +217,39 @@ namespace ASP_KN_P_212.Data.DAL
             {
                 throw new ArgumentException("Room not found for id = " + model.RoomId);
             }
+            _context.Reservations.Add(new()
+            {
+                Id = Guid.NewGuid(),
+                Date = model.Date,
+                RoomId = model.RoomId,
+                UserId = model.UserId,
+                Price = room.DailyPrice,
+                OrderDt = DateTime.Now
+            });
+            lock (_dbLocker)
+            {                
+                _context.SaveChanges();
+            }
+        }
+
+        public void DeleteReservation(Guid id)
+        {
+            Reservation? reservation;
             lock (_dbLocker)
             {
-                _context.Reservations.Add(new()
-                {
-                    Id = Guid.NewGuid(),
-                    Date = model.Date,
-                    RoomId = model.RoomId,
-                    UserId = model.UserId,
-                    Price = room.DailyPrice,
-                    OrderDt = DateTime.Now
-                });
+                reservation = _context.Reservations.Find(id);
+            }
+            if(reservation == null)
+            {
+                throw new ArgumentException("Passed id not found");
+            }
+            if(reservation.DeletedDt != null)
+            {
+                throw new ArgumentException("Passed id already deleted");
+            }
+            reservation.DeletedDt = DateTime.Now;
+            lock (_dbLocker)
+            {
                 _context.SaveChanges();
             }
         }
