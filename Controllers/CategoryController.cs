@@ -41,7 +41,8 @@ namespace ASP_KN_P_212.Controllers
                     using var stream = System.IO.File.OpenWrite(pathName);
                     model.Photo.CopyTo(stream);
                 }
-                _dataAccessor.ContentDao.AddCategory(model.Name, model.Description, fileName);
+                _dataAccessor.ContentDao
+                    .AddCategory(model.Name, model.Description, fileName, model.Slug);
                 Response.StatusCode = StatusCodes.Status201Created;
                 return "Ok";
             }
@@ -54,8 +55,19 @@ namespace ASP_KN_P_212.Controllers
     }
     public class CategoryPostModel
     {
-        public String Name { get; set; }
-        public String Description { get; set; }
+        [FromForm(Name = "category-name")]
+        public String Name { get; set; } = null!;
+
+
+        [FromForm(Name = "category-description")]
+        public String Description { get; set; } = null!;
+
+
+        [FromForm(Name = "category-slug")]
+        public String Slug { get; set; } = null!;
+
+
+        [FromForm(Name = "category-photo")]
         public IFormFile? Photo { get; set; }
     }
 }

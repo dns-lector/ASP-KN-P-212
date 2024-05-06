@@ -18,6 +18,21 @@
             }
         });
     }
+    if (form.id == 'category-form') {
+        e.preventDefault();
+        let formData = new FormData(form);
+        // перевіряємо чи це додавання чи редагування.
+        // Ознака - наявність поля category-id
+        ctgId = formData.get("category-id");
+        if (ctgId) {
+            // оновлення
+            console.log("Оновлення категорії " + ctgId);
+        }
+        else {
+            // додавання (створення)
+            console.log("Додавання нової категорії");
+        }
+    }
     // на інші форми не впливаємо
 });
 
@@ -27,7 +42,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initAdminPage();
     serveReserveButtons();
+    serveAdminButtons();
 });
+
+function serveAdminButtons() {
+    for (let btn of document.querySelectorAll('[data-type="edit-category"]')) {
+        btn.addEventListener('click', e => {
+            let b = e.target.closest('[data-type="edit-category"]');
+            document.querySelector('[name="category-id"]').value =
+                b.getAttribute("data-category-id");
+            document.querySelector('[name="category-name"]').value =
+                b.getAttribute("data-category-name");
+            document.querySelector('[name="category-description"]').value =
+                b.getAttribute("data-category-description");
+            document.querySelector('[name="category-slug"]').value =
+                b.getAttribute("data-category-slug");
+        });
+    }
+}
+
+
 function authButtonClick() {
     const authEmail = document.getElementById("auth-email");
     if (!authEmail) throw "Element '#auth-email' not found"; 
