@@ -3,11 +3,12 @@
     public class User
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string? AvatarUrl { get; set; }
-        public string Salt { get; set; } // за RFC-2898
-        public string DerivedKey { get; set; }  // за RFC-2898
+        public String Name { get; set; }
+        public String Email { get; set; }
+        public String? EmailConfirmCode { get; set; }  // code OR null:  null - ознака підтвердження
+        public String? AvatarUrl { get; set; }
+        public String Salt { get; set; } // за RFC-2898
+        public String DerivedKey { get; set; }  // за RFC-2898
         public DateTime? Birthdate { get; set; }
         public DateTime? DeletedDt { get; set; }
         public String? Role { get; set; }

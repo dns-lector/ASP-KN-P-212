@@ -87,6 +87,17 @@ namespace ASP_KN_P_212.Controllers
             }            
         }
 
+        [HttpGet("reserve/{id}")]
+        public List<Reservation> GetReservations(String id)
+        {
+            Room? room;
+            lock (this)
+            {
+                room = _dataAccessor.ContentDao.GetRoomBySlug(id);
+            }
+            return room?.Reservations;
+        }
+
         [HttpPost("reserve")]
         public String ReserveRoom([FromBody] ReserveRoomFormModel model)
         {
@@ -125,6 +136,12 @@ namespace ASP_KN_P_212.Controllers
                 Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
                 return ex.Message;
             }            
+        }
+
+        [HttpPatch]
+        public Room? DoPatch(String slug)
+        {
+            return _dataAccessor.ContentDao.GetRoomBySlug(slug);
         }
     }
 }

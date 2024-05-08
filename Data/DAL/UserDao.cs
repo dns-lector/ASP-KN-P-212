@@ -53,7 +53,27 @@ namespace ASP_KN_P_212.Data.DAL
             }
             _dataContext.Users.Add( user );
             _dataContext.SaveChanges();
-        } 
+        }
+
+        public Boolean ConfirmEmail(String email, String code)
+        {
+            // Find User by E-mail
+            User? user;
+            lock (_dbLocker) 
+            {
+                user = _dataContext.Users.FirstOrDefault(u => u.Email == email);
+            }
+            if (user == null || user.EmailConfirmCode != code)
+            {
+                return false;
+            }
+            user.EmailConfirmCode = null;
+            lock (_dbLocker)
+            {
+                _dataContext.SaveChanges();
+            }
+            return true;
+        }
     }
 }
 /* DAL - Data Access Layer - сукупність усіх DAO

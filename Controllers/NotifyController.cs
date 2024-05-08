@@ -1,12 +1,41 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ASP_KN_P_212.Services.Email;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using System.Net.Mail;
 
 namespace ASP_KN_P_212.Controllers
 {
     [Route("api/notify")]
     [ApiController]
-    public class NotifyController : ControllerBase
+    public class NotifyController(IEmailService emailService) : ControllerBase
     {
+        private readonly IEmailService _emailService = emailService;
+
+        [HttpGet]
+        public Object DoGet()
+        {
+            // Надсилаємо листа
+            try
+            { 
+                MailMessage mailMessage = new()
+                {
+                    IsBodyHtml = true,
+                    Body = "<h1>Шановний користувач!</h1>" +
+                        "<p style='color: steelblue'>Вітаємо на сайті " +
+                        $"<a href='{Request.Host}'>ASP</a></p>"
+                };
+                mailMessage.To.Add(new MailAddress("denniksam@gmail.com"));
+
+                _emailService.Send(mailMessage);
+
+                return new { Sent = "OK" };
+            }
+            catch (Exception ex) 
+            {
+                return new { Error = ex.Message };
+            }
+        }
     }
 }
 /* Робота з E-mail
@@ -30,4 +59,16 @@ namespace ASP_KN_P_212.Controllers
  *  - створюємо у проєкті файл emailconfig.sample.json
  *  = бажано перевірити - зробити коміт і переконатись, що лише один файл
  *     є у репозиторії - emailconfig.sample.json
+ *     
+ * 3. Налаштовуємо або дізнаємось налаштування SMTP (на прикладі Gmail)
+ * - переходимо до обікового запису (https://myaccount.google.com/)
+ * - (зліва) Безпека - (по центру) Вхід - двоетапна автентифікація
+ * - Пароли приложений - створити новий - копіюємо до emailconfig.json
+ * - Після заповнення emailconfig.json, робимо його копію до 
+ *    emailconfig.sample.json і видаляємо в ній усі персональні дані
+ *    (як правило замість них залишають примітки на кшталт ***CHANGE_ME***)
+ * = Додаємо нову конфігурацію до загальних налаштувань у Program.cs   
+ * = У властивостях файлу emailconfig.json зазначаємо 
+ *     "Copy to output directory" - "Copy if newer"
+ *    
  */

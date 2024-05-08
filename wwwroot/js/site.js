@@ -40,27 +40,39 @@ document.addEventListener('DOMContentLoaded', function () {
     const authButton = document.getElementById("auth-button");
     if (authButton) authButton.addEventListener('click', authButtonClick);
 
+    const confirmEmailButton = document.getElementById("confirm-email-button");
+    if (confirmEmailButton) confirmEmailButton.addEventListener('click', confirmEmailClick);
+
     initAdminPage();
     serveReserveButtons();
     serveAdminButtons();
 });
 
-function serveAdminButtons() {
-    for (let btn of document.querySelectorAll('[data-type="edit-category"]')) {
-        btn.addEventListener('click', e => {
-            let b = e.target.closest('[data-type="edit-category"]');
-            document.querySelector('[name="category-id"]').value =
-                b.getAttribute("data-category-id");
-            document.querySelector('[name="category-name"]').value =
-                b.getAttribute("data-category-name");
-            document.querySelector('[name="category-description"]').value =
-                b.getAttribute("data-category-description");
-            document.querySelector('[name="category-slug"]').value =
-                b.getAttribute("data-category-slug");
-        });
-    }
-}
+function confirmEmailClick() {
+    const emailCodeInput = document.getElementById("email-code");
+    if (!emailCodeInput) throw "Element '#email-code' not found";
+    const emailMessage = document.getElementById("email-message");
+    if (!emailMessage) throw "Element '#email-message' not found";
 
+    const code = emailCodeInput.value?.trim();
+    if (!code) {
+        emailMessage.classList.remove('visually-hidden');
+        emailMessage.innerText = "Необхідно ввести код";
+        return;
+    }
+    const email = emailCodeInput.getAttribute("data-email");
+
+    fetch(`/api/auth?email=${email}&code=${code}`, { method: 'PATCH' })
+        .then(r => {
+            if (r.status === 202) {
+                window.location.reload();
+            }
+            else {
+                emailMessage.classList.remove('visually-hidden');
+                emailMessage.innerText = "Код не прийнято";
+            }
+        });
+}
 
 function authButtonClick() {
     const authEmail = document.getElementById("auth-email");
@@ -90,6 +102,24 @@ function authButtonClick() {
             }
         });
 }
+
+function serveAdminButtons() {
+    for (let btn of document.querySelectorAll('[data-type="edit-category"]')) {
+        btn.addEventListener('click', e => {
+            let b = e.target.closest('[data-type="edit-category"]');
+            document.querySelector('[name="category-id"]').value =
+                b.getAttribute("data-category-id");
+            document.querySelector('[name="category-name"]').value =
+                b.getAttribute("data-category-name");
+            document.querySelector('[name="category-description"]').value =
+                b.getAttribute("data-category-description");
+            document.querySelector('[name="category-slug"]').value =
+                b.getAttribute("data-category-slug");
+        });
+    }
+}
+
+
 
 //////// ADMIN PAGE ////////////
 function initAdminPage() {

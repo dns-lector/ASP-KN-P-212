@@ -40,6 +40,7 @@ namespace ASP_KN_P_212.Middleware
                         new(ClaimTypes.Name,     user.Name),
                         new(ClaimTypes.UserData, user.AvatarUrl ?? ""),
                         new(ClaimTypes.Role,     user.Role ?? ""),
+                        new("EmailConfirmCode",  user.EmailConfirmCode ?? "")
                     };
 
                     context.User = new ClaimsPrincipal(

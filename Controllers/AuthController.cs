@@ -44,10 +44,26 @@ namespace ASP_KN_P_212.Controllers
         {
             return new { Status = "POST works" };
         }
+
         [HttpPut]
         public object Put()
         {
             return new { Status = "PUT works" };
+        }
+
+        [HttpPatch]
+        public object Patch(String email, String code)   // Confirm E-mail by code
+        {
+            if(_dataAccessor.UserDao.ConfirmEmail(email, code))
+            {
+                Response.StatusCode = StatusCodes.Status202Accepted;
+                return new { Status = "OK" };
+            }
+            else
+            {
+                Response.StatusCode= StatusCodes.Status409Conflict;
+                return new { Status = "Error" };
+            }
         }
     }
 }

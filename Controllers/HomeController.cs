@@ -4,11 +4,13 @@ using ASP_KN_P_212.Models;
 using ASP_KN_P_212.Models.Home.FrontendForm;
 using ASP_KN_P_212.Models.Home.Ioc;
 using ASP_KN_P_212.Models.Home.Signup;
+using ASP_KN_P_212.Services.Email;
 using ASP_KN_P_212.Services.Hash;
 using ASP_KN_P_212.Services.Kdf;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Net.Mail;
 
 namespace ASP_KN_P_212.Controllers
 {
@@ -30,15 +32,44 @@ namespace ASP_KN_P_212.Controllers
         private readonly DataContext _dataContext;
         private readonly DataAccessor _dataAccessor;
         private readonly IKdfService _kdfService;
+        private readonly IEmailService _emailService;
 
         // додаємо до конструктора параметр-залежність і зберігаємо її у тілі
-        public HomeController(ILogger<HomeController> logger, IHashService hashService, DataContext dataContext, DataAccessor dataAccessor, IKdfService kdfService)
+        public HomeController(ILogger<HomeController> logger, IHashService hashService, DataContext dataContext, DataAccessor dataAccessor, IKdfService kdfService, IEmailService emailService)
         {
             _logger = logger;           // Збереження переданих залежностей, що їх
             _hashService = hashService; // передає контейнер при створенні контролера
             _dataContext = dataContext;
             _dataAccessor = dataAccessor;
             _kdfService = kdfService;
+            _emailService = emailService;
+        }
+
+        public IActionResult ConfirmEmail(String id)
+        {
+            /* Ідея Basic-автентифікації -- розділення логіну та паролю
+             * через ":" та кодування у Base64
+             * user@i.ua:123  ---  dXNlckBpLnVhOjEyMw==   
+             */
+            String email, code;
+            try
+            {
+                String data = System.Text.Encoding.UTF8.GetString(
+                    Convert.FromBase64String(id));     // user@i.ua:123
+                String[] parts = data.Split(':', 2);   // [user@i.ua, 123]
+                email = parts[0];   // user@i.ua
+                code = parts[1];    // 123
+                ViewData["result"] =
+                    _dataAccessor.UserDao.ConfirmEmail(email, code)
+                    ? "Пошта успішно підтверджена"
+                    : "Помилка підтвердження пошти";
+            }
+            catch
+            {
+                ViewData["result"] = "Дані не розпізнані";
+            }
+            
+            return View();
         }
 
         public IActionResult Index()
@@ -119,16 +150,42 @@ namespace ASP_KN_P_212.Controllers
                 pageModel.ValidationErrors = _ValidateSignupModel(formModel);
                 if(pageModel.ValidationErrors.Count == 0)
                 {   // Немає помилок валідації - реєструємо користувача
-                    String salt = Guid.NewGuid().ToString();
-                    _dataAccessor.UserDao.Signup(new()
+                    // Перевіряємо E-mail
+                    // Генеруємо код
+                    String code = Guid.NewGuid().ToString()[..6];
+                    String slug = Convert.ToBase64String(
+                        System.Text.Encoding.UTF8.GetBytes(
+                            $"{formModel.UserEmail}:{code}"));
+                    MailMessage mailMessage = new()
                     {
-                        Name = formModel.UserName,
-                        Email = formModel.UserEmail,
-                        Birthdate = formModel.UserBirthdate,
-                        AvatarUrl = formModel.SavedAvatarFilename,
-                        Salt = salt,
-                        DerivedKey = _kdfService.DerivedKey(salt, formModel.Password)
-                    });
+                        Subject = "Підтвердження пошти",
+                        IsBodyHtml = true,
+                        Body = "<p>Для підтвердження пошти введіть на сайті код</p>" +
+                        $"<h2 style='color: orange'>{code}</h2>" +
+                        $"<p>Або перейдіть за <a href='{Request.Scheme}://{Request.Host}/Home/ConfirmEmail/{slug}'>цим посиланням</a></p>"
+                    };
+                    _logger.LogInformation(mailMessage.Body);
+                    mailMessage.To.Add(formModel.UserEmail);
+                    try 
+                    {
+                        _emailService.Send(mailMessage);
+                        String salt = Guid.NewGuid().ToString();
+                        _dataAccessor.UserDao.Signup(new()
+                        {
+                            Name = formModel.UserName,
+                            Email = formModel.UserEmail,
+                            EmailConfirmCode = code,
+                            Birthdate = formModel.UserBirthdate,
+                            AvatarUrl = formModel.SavedAvatarFilename,
+                            Salt = salt,
+                            DerivedKey = _kdfService.DerivedKey(salt, formModel.Password)
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        pageModel.ValidationErrors["email"] = "Не вдалось надіслати E-mail";
+                        _logger.LogInformation(ex.Message);
+                    }                    
                 }
             }
             // _logger.LogInformation(Directory.GetCurrentDirectory());
@@ -204,8 +261,10 @@ namespace ASP_KN_P_212.Controllers
         }
     }
 }
-/* Д.З. Впровадити CRUD у власному курсовому проєкті
- * Реалізувати механізм м'якого видалення даних (soft delete)
- * Перелаштувати DAL на фільтрацію видалених даних
- *   
+/* Д.З. Реалізувати засоби відновлення паролю
+ * Додати модальне вікно, яке запускається елементом "Забув пароль"
+ * У вікні вводиться пошта та (одне з двох - або дата народження, або 
+ * реальне ім'я)
+ * Введені дані обробляються, якщо все правильно, то генерується новий
+ * пароль, формується новий DK. Сам новий пароль надсилається е-листом.
  */

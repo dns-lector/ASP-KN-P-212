@@ -1,12 +1,15 @@
 using ASP_KN_P_212.Data;
 using ASP_KN_P_212.Data.DAL;
 using ASP_KN_P_212.Middleware;
+using ASP_KN_P_212.Services.Email;
 using ASP_KN_P_212.Services.Hash;
 using ASP_KN_P_212.Services.Kdf;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("emailconfig.json", false);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -50,6 +53,7 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 builder.Services.AddSingleton<DataAccessor>();
 builder.Services.AddSingleton<IKdfService, Pbkdf1Service>();
+builder.Services.AddSingleton<IEmailService, GmailService>();
 
 // Налаштування Http-сесій
 builder.Services.AddDistributedMemoryCache();
@@ -59,6 +63,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
 
 var app = builder.Build();
 
