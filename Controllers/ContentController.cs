@@ -4,6 +4,7 @@ using ASP_KN_P_212.Models.Content.Index;
 using ASP_KN_P_212.Models.Content.Location;
 using ASP_KN_P_212.Models.Content.Room;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ASP_KN_P_212.Controllers
 {
@@ -13,9 +14,14 @@ namespace ASP_KN_P_212.Controllers
 
         public IActionResult Index()
         {
+            String? userRole = HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            bool isAdmin = "Admin".Equals(userRole);
+
             ContentIndexPageModel model = new()
             {
-                Categories = _dataAccessor.ContentDao.GetCategories()
+                Categories = _dataAccessor.ContentDao.GetCategories(includeDeleted: isAdmin)
             };
             return View(model);
         }

@@ -2,6 +2,7 @@
 using ASP_KN_P_212.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ASP_KN_P_212.Controllers
 {
@@ -18,7 +19,12 @@ namespace ASP_KN_P_212.Controllers
         [HttpGet]
         public List<Category> DoGet()
         {
-            return _dataAccessor.ContentDao.GetCategories();
+            String? userRole = HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            bool isAdmin = "Admin".Equals(userRole);
+
+            return _dataAccessor.ContentDao.GetCategories(includeDeleted: isAdmin);
         }
 
         [HttpPost]
@@ -51,6 +57,45 @@ namespace ASP_KN_P_212.Controllers
                 Response.StatusCode = StatusCodes.Status400BadRequest;
                 return "Error";
             }
+        }
+
+        [HttpDelete("{id}")]
+        public String DoDelete(Guid id)
+        {
+            _dataAccessor.ContentDao.DeleteCategory(id);
+            Response.StatusCode = StatusCodes.Status202Accepted;
+            return "Ok";
+        }
+
+        // метод, НЕ позначений атрибутом, буде викликано, якщо не знайдеться
+        // необхідний з позначених. Це дозволяє прийняти нестандартні запити
+        public Object DoOther()
+        {
+            // дані про метод запиту - у Request.Method
+            if (Request.Method == "RESTORE")
+            {
+                return DoRestore();
+            }
+            Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+            return "Method Not Allowed";
+        }
+        // Другий НЕ позначений метод має бути private щоб не було конфлікту
+        private String DoRestore()
+        {
+            // Через відсутність атрибутів, автоматичного зв'язування параметрів
+            // немає, параметри дістаємо з колекцій Request
+            String? id = Request.Query["id"].FirstOrDefault();
+            try
+            {
+                _dataAccessor.ContentDao.RestoreCategory( Guid.Parse(id!) );
+            }
+            catch
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return "Empty or invalid id";
+            }
+            Response.StatusCode = StatusCodes.Status202Accepted;
+            return "RESTORE OK for id = " + id;
         }
     }
     public class CategoryPostModel

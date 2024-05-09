@@ -51,13 +51,13 @@ namespace ASP_KN_P_212.Data.DAL
                 _context.SaveChanges();
             }
         }
-        public List<Category> GetCategories()
+        public List<Category> GetCategories(bool includeDeleted = false)
         {
             List<Category> list;
             lock (_dbLocker) {
                 list = _context
                     .Categories
-                    .Where(c => c.DeletedDt == null)
+                    .Where(c => includeDeleted || c.DeletedDt == null)
                     .ToList();
             }
             return list;
@@ -89,10 +89,29 @@ namespace ASP_KN_P_212.Data.DAL
             var ctg = _context
                 .Categories
                 .Find(id);
-            if (ctg != null)
+
+            if (ctg != null && ctg.DeletedDt == null)
             {
                 ctg.DeletedDt = DateTime.Now;
-                _context.SaveChanges();
+                lock (_dbLocker)
+                {
+                    _context.SaveChanges();
+                }
+            }
+        }
+        public void RestoreCategory(Guid id)
+        {
+            var ctg = _context
+                .Categories
+                .Find(id);
+
+            if (ctg != null && ctg.DeletedDt != null)
+            {
+                ctg.DeletedDt = null;
+                lock (_dbLocker)
+                {
+                    _context.SaveChanges();
+                }
             }
         }
         public void DeleteCategory(Category category)
