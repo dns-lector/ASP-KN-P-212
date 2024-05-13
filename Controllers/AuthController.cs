@@ -1,4 +1,5 @@
 ﻿using ASP_KN_P_212.Data.DAL;
+using ASP_KN_P_212.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -65,8 +66,38 @@ namespace ASP_KN_P_212.Controllers
                 return new { Status = "Error" };
             }
         }
+
+        [HttpGet("token")]
+        public Token? GetToken(String email, String? password)
+        {
+            var user = _dataAccessor.UserDao.Authorize(email, password ?? "");
+            if (user == null)
+            {
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return null;
+            }
+            return _dataAccessor.UserDao.CreateTokenForUser(user);
+        }
     }
 }
+/* Схеми авторизації API. Токени
+ * Розрізняють дві групи схем
+ * - серверні сесії - підходить для Server-Page архітектури
+ * - токени - для SPA архітектури
+ * Токен (від англ. - жетон, посвідчення) - дані, що дозволяють
+ * автентифікувати запит від фронтенду
+ * 
+ * Back             Front
+ *   <------------[login,password]
+ * [token: 123]-------->
+ *    <-----------[GET /rooms token: 123]
+ * [перевірка
+ *  токена,
+ *  відповідь]---->
+ *  
+ *  
+ */
+
 /* Контролери поділяються на дві групи - API та MVC
  * MVC:
  *  - мають багато Action, кожен з яких запускається своїм Route

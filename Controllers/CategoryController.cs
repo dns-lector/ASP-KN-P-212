@@ -1,7 +1,9 @@
 ﻿using ASP_KN_P_212.Data.DAL;
 using ASP_KN_P_212.Data.Entities;
+using ASP_KN_P_212.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using System.Security.Claims;
 
 namespace ASP_KN_P_212.Controllers
@@ -30,6 +32,35 @@ namespace ASP_KN_P_212.Controllers
         [HttpPost]
         public String DoPost([FromForm] CategoryPostModel model)
         {
+            /* У проєкті є дві авторизації: через сесії та через токени. 
+               Первинна авторизація за сесією (в силу того, що з неї починали)
+               Дані авторизації за токеном шукаємо за типом авторизації, яку ми
+               встановили як назва класу (AuthTokenMiddleware)
+            */
+            var identity = User.Identities
+                .FirstOrDefault(i => i.AuthenticationType == nameof(AuthTokenMiddleware));
+            if(identity == null)
+            {
+                // якщо авторизація не пройдена, то повідомлення в Items
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return HttpContext.Items[nameof(AuthTokenMiddleware)]?.ToString() ?? "";
+            }
+            
+            if (identity.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value != "Admin")
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return "Access to API forbidden";
+            }
+            /* Д.З. 
+             * ASP: Удосконалити процедуру створення нових токенів:
+             *  спочатку перевіряти чи є у даного користувача активний
+             *  токен, якщо є - то повертати його, якщо ні - новий
+             * React: Удосконалити процедуру перевірки токенів:
+             *  при старті проєкту не лише перевіряти наявність токена
+             *  у localStorage, а ще й аналізувати його термін придатності
+             *  (expireDt). Якщо токен вже не актуальний, то видавати
+             *  відповідне повідомлення (Сесія завершена, необхідно оновлення)
+             */
             try
             {
                 String? fileName = null;

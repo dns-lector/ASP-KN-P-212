@@ -1,4 +1,6 @@
-﻿namespace ASP_KN_P_212.Data.Entities
+﻿using System.Text.Json.Serialization;
+
+namespace ASP_KN_P_212.Data.Entities
 {
     public class User
     {
@@ -6,14 +8,14 @@
         public String Name { get; set; }
         public String Email { get; set; }
         public String? EmailConfirmCode { get; set; }  // code OR null:  null - ознака підтвердження
-        public String? AvatarUrl { get; set; }
-        public String Salt { get; set; } // за RFC-2898
-        public String DerivedKey { get; set; }  // за RFC-2898
+        public String? AvatarUrl { get; set; }        
+        [JsonIgnore] public String Salt { get; set; } // за RFC-2898
+        [JsonIgnore] public String DerivedKey { get; set; }  // за RFC-2898
         public DateTime? Birthdate { get; set; }
         public DateTime? DeletedDt { get; set; }
         public String? Role { get; set; }
 
-        public List<Reservation> Reservations { get; set; }
+        [JsonIgnore] public List<Reservation> Reservations { get; set; }
     }
 }
 /*

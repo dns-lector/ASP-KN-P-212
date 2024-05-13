@@ -92,6 +92,7 @@ app.UseSession();
 // Підключення нашого Middleware
 // app.UseMiddleware<AuthSessionMiddleware>();
 app.UseAuthSession();
+app.UseAuthToken();
 
 
 app.MapControllerRoute(
