@@ -5,20 +5,23 @@ using ASP_KN_P_212.Models.Content.Location;
 using ASP_KN_P_212.Models.Content.Room;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Security.Claims;
 
 namespace ASP_KN_P_212.Controllers
 {
     [Route("api/room")]
     [ApiController]
-    public class RoomController(DataAccessor dataAccessor, ILogger<RoomController> logger) : ControllerBase
-
+    public class RoomController(DataAccessor dataAccessor, ILogger<RoomController> logger) 
+        : BackendController
     {
         private readonly DataAccessor _dataAccessor = dataAccessor;
-        private readonly ILogger<RoomController> _logger = logger;
+        private readonly ILogger<RoomController> _logger = logger;        
 
         [HttpGet("all/{id}")]
         public List<Room> GetRooms(String id)
         {
+            _logger.LogWarning($"auth={isAuthenticated}, admin={isAdmin}");
             // var location = _dataAccessor.ContentDao.GetLocationBySlug(id);
             List<Room> rooms;
             {
@@ -162,6 +165,7 @@ namespace ASP_KN_P_212.Controllers
         {
             return _dataAccessor.ContentDao.GetRoomBySlug(slug);
         }
+
     }
 }
 /*
