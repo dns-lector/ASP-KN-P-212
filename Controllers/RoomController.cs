@@ -21,7 +21,6 @@ namespace ASP_KN_P_212.Controllers
         [HttpGet("all/{id}")]
         public List<Room> GetRooms(String id)
         {
-            _logger.LogWarning($"auth={isAuthenticated}, admin={isAdmin}");
             // var location = _dataAccessor.ContentDao.GetLocationBySlug(id);
             List<Room> rooms;
             {
@@ -51,6 +50,8 @@ namespace ASP_KN_P_212.Controllers
         [HttpPost]
         public String DoPost(RoomFormModel model)
         {
+            if (base.GetAdminAuthMessage() is String msg) return msg;
+
             try
             {
                 String? fileName = null;
@@ -137,7 +138,6 @@ namespace ASP_KN_P_212.Controllers
             }
         }
 
-
         [HttpDelete("reserve")]
         public String DropReservation([FromQuery] Guid reserveId)
         {
@@ -169,6 +169,7 @@ namespace ASP_KN_P_212.Controllers
     }
 }
 /*
- Д.З. Забезпечити валідацію даних форми, що надходять до 
-    RoomController::DoPost
+ Д.З. Реалізувати фільтри дій у LocationController
+Обмежити доступ до окремих функцій, що вимагають підвищених прав,
+тільки для користувачів з відповідними ролями.
 */

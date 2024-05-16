@@ -28,5 +28,21 @@ namespace ASP_KN_P_212.Controllers
 
         [NonAction] public void OnActionExecuted(ActionExecutedContext context)
         { }
+
+        protected String? GetAdminAuthMessage()
+        {
+            if (!isAuthenticated)
+            {
+                // якщо авторизація не пройдена, то повідомлення в Items
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return HttpContext.Items[nameof(AuthTokenMiddleware)]?.ToString() ?? "Auth required";
+            }
+            if (!isAdmin)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                return "Access to API forbidden";
+            }
+            return null;
+        }
     }
 }

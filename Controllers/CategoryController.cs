@@ -12,58 +12,18 @@ namespace ASP_KN_P_212.Controllers
     [Route("api/category")]
     [ApiController]
     // IActionFilter - засоби для дій, що виконуються до та після Action-ів
-    public class CategoryController : ControllerBase, IActionFilter
+    public class CategoryController : BackendController
     {
         private readonly DataAccessor _dataAccessor;
         private readonly ILogger<CategoryController> _logger;
-        private bool isAuthenticated;
-        private bool isAdmin;
+
         public CategoryController(DataAccessor dataAccessor, ILogger<CategoryController> logger)
         {
             _dataAccessor = dataAccessor;
             _logger = logger;
         }
-
-        // метод IActionFilter, що виконується ДО дій контролера (DoGet, DoPost,...)
-        [NonAction]
-        public void OnActionExecuting(ActionExecutingContext context)
-        {
-            /* У проєкті є дві авторизації: через сесії та через токени. 
-               Первинна авторизація за сесією (в силу того, що з неї починали)
-               Дані авторизації за токеном шукаємо за типом авторизації, яку ми
-               встановили як назва класу (AuthTokenMiddleware)
-            */
-            // по-перше шукаємо схему з AuthSessionMiddleware
-            var identity = User.Identities
-                .FirstOrDefault(i => i.AuthenticationType == nameof(AuthSessionMiddleware));
-            
-            // якщо не знаходимо, то шукаємо з AuthTokenMiddleware
-            identity ??= User.Identities
-                .FirstOrDefault(i => i.AuthenticationType == nameof(AuthTokenMiddleware));
-
-            this.isAuthenticated = identity != null;
-
-            String? userRole = identity?.Claims
-                .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-            this.isAdmin = "Admin".Equals(userRole);
-        }
-
-        private String? getAdminAuthMessage()
-        {
-            if (!isAuthenticated)
-            {
-                // якщо авторизація не пройдена, то повідомлення в Items
-                Response.StatusCode = StatusCodes.Status401Unauthorized;
-                return HttpContext.Items[nameof(AuthTokenMiddleware)]?.ToString() ?? "Auth required";
-            }
-            if (!isAdmin)
-            {
-                Response.StatusCode = StatusCodes.Status403Forbidden;
-                return "Access to API forbidden";
-            }
-            return null;
-        }
+        
+        
 
         [HttpGet]
         public List<Category> DoGet()
@@ -74,7 +34,7 @@ namespace ASP_KN_P_212.Controllers
         [HttpPost]
         public String DoPost([FromForm] CategoryPostModel model)
         {
-            if (getAdminAuthMessage() is String msg) return msg;
+            if (GetAdminAuthMessage() is String msg) return msg;
 
             try
             {
@@ -108,7 +68,7 @@ namespace ASP_KN_P_212.Controllers
         [HttpPut]  // Update category
         public String DoPut([FromForm] CategoryPostModel model)
         {
-            if (getAdminAuthMessage() is String msg) return msg;
+            if (GetAdminAuthMessage() is String msg) return msg;
 
             // перевіряємо CategoryId на наявність
             if (model.CategoryId == null || model.CategoryId == default(Guid))
@@ -167,7 +127,7 @@ namespace ASP_KN_P_212.Controllers
         [HttpDelete("{id}")]
         public String DoDelete(Guid id)
         {
-            if (getAdminAuthMessage() is String msg) return msg;
+            if (GetAdminAuthMessage() is String msg) return msg;
 
             _dataAccessor.ContentDao.DeleteCategory(id);
             Response.StatusCode = StatusCodes.Status202Accepted;
@@ -189,7 +149,7 @@ namespace ASP_KN_P_212.Controllers
         // Другий НЕ позначений метод має бути private щоб не було конфлікту
         private String DoRestore()
         {
-            if (getAdminAuthMessage() is String msg) return msg;
+            if (GetAdminAuthMessage() is String msg) return msg;
 
             // Через відсутність атрибутів, автоматичного зв'язування параметрів
             // немає, параметри дістаємо з колекцій Request
@@ -207,12 +167,6 @@ namespace ASP_KN_P_212.Controllers
             return "RESTORE OK for id = " + id;
         }
 
-        // метод IActionFilter, що виконується ПІСЛЯ дій контролера (DoGet, DoPost,...)
-        [NonAction]  // Якщо неможна зробити метод private, то позначаємо [NonAction]
-        public void OnActionExecuted(ActionExecutedContext context)
-        {
-            
-        }
     }
     public class CategoryPostModel
     {
