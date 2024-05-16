@@ -1,5 +1,6 @@
 ﻿using ASP_KN_P_212.Data.DAL;
 using ASP_KN_P_212.Data.Entities;
+using ASP_KN_P_212.Middleware;
 using ASP_KN_P_212.Models.Content.Location;
 using ASP_KN_P_212.Models.Content.Room;
 using Microsoft.AspNetCore.Http;
@@ -101,6 +102,24 @@ namespace ASP_KN_P_212.Controllers
         [HttpPost("reserve")]
         public String ReserveRoom([FromBody] ReserveRoomFormModel model)
         {
+            // TODO: перевірити, що кімната вільна на дату бронювання
+            // а також дата бронювання не є у минулому
+            // ? видаляти "м'яко видалені" замовлення на цю дату
+
+            // Первинна автентифікація - за сесією.
+            // якщо вона є, то іде робота з сайтом через Razor
+            if (!(User.Identity?.IsAuthenticated ?? false))
+            {
+                // Якщо немає первинної авторизації - перевіряємо токен
+                var identity = User.Identities
+                    .FirstOrDefault(i => i.AuthenticationType == nameof(AuthTokenMiddleware));
+                if (identity == null)
+                {
+                    // якщо авторизація не пройдена, то повідомлення в Items
+                    Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return HttpContext.Items[nameof(AuthTokenMiddleware)]?.ToString() ?? "";
+                }
+            }
             try
             {
                 _dataAccessor.ContentDao.ReserveRoom(model);

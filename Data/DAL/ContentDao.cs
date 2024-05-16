@@ -71,16 +71,31 @@ namespace ASP_KN_P_212.Data.DAL
             }
             return ctg;
         }
+        public Category? GetCategoryById(Guid id)
+        {
+            Category? ctg;
+            lock (_dbLocker)
+            {
+                ctg = _context.Categories.Find(id);
+            }
+            return ctg;
+        }
         public void UpdateCategory(Category category)
         {
-            var ctg = _context
-                .Categories
-                .Find(category.Id);
-            if(ctg != null)
+            Category? ctg;
+            lock (_dbLocker)
             {
-                ctg.Name = category.Name;
+                ctg = _context.Categories.Find(category.Id);
+            }
+            if(ctg != null && ctg != category)
+            {
+                ctg.Name        = category.Name;
                 ctg.Description = category.Description;
-                ctg.DeletedDt = category.DeletedDt;
+                ctg.DeletedDt   = category.DeletedDt;
+                ctg.PhotoUrl    = category.PhotoUrl;                
+            }
+            lock (_dbLocker)
+            {
                 _context.SaveChanges();
             }
         }

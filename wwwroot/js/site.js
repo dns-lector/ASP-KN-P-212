@@ -27,10 +27,32 @@
         if (ctgId) {
             // оновлення
             console.log("Оновлення категорії " + ctgId);
+            fetch('/api/category', {
+                method: 'PUT',
+                body: formData
+            }).then(r => {
+                if (r.status < 300) {
+                    window.location.reload();
+                }
+                else {
+                    r.text().then(alert);
+                }
+            });
         }
         else {
             // додавання (створення)
             console.log("Додавання нової категорії");
+            fetch('/api/category', {
+                method: 'POST',
+                body: formData
+            }).then(r => {
+                if (r.status == 201) {
+                    window.location.reload();
+                }
+                else {
+                    r.text().then(alert);
+                }
+            });
         }
     }
     // на інші форми не впливаємо
