@@ -106,24 +106,30 @@ namespace ASP_KN_P_212.Controllers
         [HttpPost("reserve")]
         public String ReserveRoom([FromBody] ReserveRoomFormModel model)
         {
-            // TODO: перевірити, що кімната вільна на дату бронювання
-            // а також дата бронювання не є у минулому
-            // ? видаляти "м'яко видалені" замовлення на цю дату
-
-            // Первинна автентифікація - за сесією.
-            // якщо вона є, то іде робота з сайтом через Razor
-            if (!(User.Identity?.IsAuthenticated ?? false))
+            if ( ! base.isAuthenticated)
             {
-                // Якщо немає первинної авторизації - перевіряємо токен
-                var identity = User.Identities
-                    .FirstOrDefault(i => i.AuthenticationType == nameof(AuthTokenMiddleware));
-                if (identity == null)
-                {
-                    // якщо авторизація не пройдена, то повідомлення в Items
-                    Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    return HttpContext.Items[nameof(AuthTokenMiddleware)]?.ToString() ?? "";
-                }
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return "Authorization failed";
             }
+
+            // Перевіряємо, що немає розбіжності в ID користувача з авторизації та форми
+            if( base.claims?.First(c => c.Type == ClaimTypes.Sid)?.Value
+                    != model.UserId.ToString() )
+            {
+                Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+                return "Ambiguous user identification";
+            }
+            
+            // перевірити, що кімната вільна на дату бронювання
+            Reservation? reservation = _dataAccessor.ContentDao
+                .GetReservation(model.RoomId, model.Date);
+            if( reservation != null )
+            {
+                Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+                return "Room is reserved for requested date";
+            }
+            // а також дата бронювання не є у минулому...
+            
             try
             {
                 _dataAccessor.ContentDao.ReserveRoom(model);
@@ -169,7 +175,7 @@ namespace ASP_KN_P_212.Controllers
     }
 }
 /*
- Д.З. Реалізувати фільтри дій у LocationController
-Обмежити доступ до окремих функцій, що вимагають підвищених прав,
-тільки для користувачів з відповідними ролями.
+ Д.З. Прикласти посилання на репозиторій з підсумковим проєктом.
+
+// а також дата бронювання не є у минулому...
 */

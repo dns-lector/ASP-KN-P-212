@@ -265,7 +265,20 @@ namespace ASP_KN_P_212.Data.DAL
                 _context.SaveChanges();
             }
         }
-
+        public Reservation? GetReservation(Guid roomId, DateTime date)
+        {
+            // Для запобігання подвійному бронюванню - пошук наявного
+            Reservation? reservation;
+            lock (_dbLocker)
+            {
+                reservation = _context.Reservations
+                    .FirstOrDefault(r =>
+                        r.RoomId == roomId &&
+                        r.Date.Date == date.Date &&
+                        r.DeletedDt == null);
+            }
+            return reservation;
+        }
         public void DeleteReservation(Guid id)
         {
             Reservation? reservation;

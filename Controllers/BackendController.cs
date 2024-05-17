@@ -9,6 +9,7 @@ namespace ASP_KN_P_212.Controllers
     {
         protected bool isAuthenticated;
         protected bool isAdmin;
+        protected IEnumerable<Claim>? claims;
 
         [NonAction] public void OnActionExecuting(ActionExecutingContext context)
         {
@@ -24,6 +25,8 @@ namespace ASP_KN_P_212.Controllers
                 .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
             this.isAdmin = "Admin".Equals(userRole);
+
+            claims = identity?.Claims;
         }
 
         [NonAction] public void OnActionExecuted(ActionExecutedContext context)
